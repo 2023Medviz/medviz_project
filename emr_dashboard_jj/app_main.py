@@ -14,6 +14,7 @@ from datetime import datetime
 from utils.data_processing import split_read
 from components.app_micro_individuals import component_indiviual
 from components.app_macro import component_macro
+from components.app_micro_analysis import component_analysis
 
 #######################
 # Page configuration
@@ -46,6 +47,11 @@ def load_data_macro() :
         condition += str(i)
         condition += ', '
     condition += ']'
+
+    tmp_data = split_read('./data/patients.csv.gz', condition = condition)
+
+    tmp_data['anchor_age_dec'] = (tmp_data['anchor_age'] // 10) * 10
+    
     data = split_read('./data/admissions.csv.gz', condition = condition)
 
     data['admittime'] = pd.to_datetime(data['admittime'])
@@ -55,9 +61,13 @@ def load_data_macro() :
     data['length_of_stay'] = (data['dischtime'] - data['admittime']).dt.total_seconds() / (24 * 3600)
     data['er_stay_length'] = (data['edouttime'] - data['edregtime']).dt.total_seconds() / 3600
 
-    return data
+    return [data, tmp_data]
 
-
+@st.cache_data
+def load_data_analysis() :
+    with open('./data/accumulated_data.json', 'r') as json_file:
+        accum_json = json.load(json_file)
+    return accum_json
 
 #######################
 # Sidebar
@@ -65,6 +75,7 @@ with st.sidebar:
     st.title('🏥 EMR Dashboard')
     dict_data = load_data_indiviual()
     admin_data = load_data_macro()      ###macro
+    analysis_data = load_data_analysis()
 
     suggestions = list(dict_data.keys())
 
@@ -108,7 +119,7 @@ if not selected_id or not selected_hadm_id:
 ##Data Implemented
 if selected_hadm_id:
 
-    tab1, tab2, tab3 = st.tabs(["Individual", "Overall", "Etc"])
+    tab1, tab2, tab3 = st.tabs(["Admission", "Ward-Wide Statistics", "Individual"])
 
     with tab1 :
         component_indiviual(dict_data, selected_id, selected_hadm_id)
@@ -117,4 +128,4 @@ if selected_hadm_id:
         component_macro(admin_data)
         
     with tab3:
-        st.markdown('#### Etc')
+        component_analysis(analysis_data, selected_id)
