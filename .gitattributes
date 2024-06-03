@@ -1,3 +1,3 @@
-emr_dashboard_jj/data/*'
- filter=lfs diff=lfs merge=lfs -text
-emr_dashboard_jj/data/* filter=lfs diff=lfs merge=lfs -text
+version https://git-lfs.github.com/spec/v1
+oid sha256:7094cba85eee72e6aa75d4a8fcf4fe3ad28734865b6bd952ae4fc1b570bef591
+size 164
